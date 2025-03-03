@@ -1,5 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const { pipeline } = require("stream");
+const { promisify } = require("util");
 const fs = require("fs");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -9,10 +11,12 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
+const pipelineAsync = promisify(pipeline);
 
 // Load private and public keys
 const privateKey = fs.readFileSync("./private.pem", "utf8");
 const publicKey = fs.readFileSync("./public.pem", "utf8");
+
 
 // Generate JWT
 function getJWTToken() {
@@ -64,15 +68,16 @@ async function getOauthAccessToken() {
 	}
 }
 
+const baseURL = "https://demo.docusign.net/restapi/v2.1";
+
 app.get("/envelopes", async (req, res) => {
 	const account_id = process.env.DOCUSIGN_ACCOUNT_ID;
-	const envelope_id = "792a9827-8cad-4da5-b0fa-eb69abd88566";
 	const oauthAccessTokenDetails = await getOauthAccessToken();
 	const accessToken = oauthAccessTokenDetails.access_token;
 	console.log("token: ", accessToken);
 	try {
 		const response = await fetch(
-			`https://demo.docusign.net/restapi/v2.1/accounts/${account_id}/envelopes?from_date=2025-03-01T14:30:00Z`,
+			`${baseURL}/accounts/${account_id}/envelopes?from_date=2025-03-01T14:30:00Z`,
 			{
 				headers: {
 					"Content-Type": "multipart/form-data; boundary=AAA",
@@ -98,7 +103,7 @@ app.get("/envelopes/:envelopeId/documents", async (req, res) => {
 	console.log("token: ", accessToken);
 	try {
 		const response = await fetch(
-			`https://demo.docusign.net/restapi/v2.1/accounts/${account_id}/envelopes/${envelope_id}/documents`,
+			`${baseURL}/accounts/${account_id}/envelopes/${envelope_id}/documents`,
 			{
 				headers: {
 					"Content-Type": "multipart/form-data; boundary=AAA",
@@ -112,6 +117,41 @@ app.get("/envelopes/:envelopeId/documents", async (req, res) => {
 		return res.json({ envelopeData });
 	} catch (error) {
 		return res.json({ error });
+	}
+});
+
+app.get("/envelopes/:envelopeId/documents/:documentId", async (req, res) => {
+	const account_id = process.env.DOCUSIGN_ACCOUNT_ID;
+	const envelope_id = req.params.envelopeId;
+	const document_id = req.params.documentId;
+	const oauthAccessTokenDetails = await getOauthAccessToken();
+	const accessToken = oauthAccessTokenDetails.access_token;
+	console.log("token: ", accessToken);
+	try {
+		const response = await fetch(
+			`${baseURL}/accounts/${account_id}/envelopes/${envelope_id}/documents/${document_id}`,
+			{
+				headers: {
+					"Content-Type": "multipart/form-data; boundary=AAA",
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}
+		);
+
+		if (!response.ok) {
+			return res
+				.status(response.status)
+				.json({ error: "Failed to fetch document" });
+		}
+
+		res.setHeader("Content-Disposition", 'attachment; filename="OS.pdf"');
+    res.setHeader("Content-Type", "application/pdf");
+
+    await pipelineAsync(response.body, res);
+	} catch (error) {
+		console.error("Error fetching document:", error);
+		res.status(500).json({ error: "Internal Server Error" });
 	}
 });
 
