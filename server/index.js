@@ -17,8 +17,6 @@ const pipelineAsync = promisify(pipeline);
 const privateKey = fs.readFileSync("./private.pem", "utf8");
 const publicKey = fs.readFileSync("./public.pem", "utf8");
 
-
-// Generate JWT
 function getJWTToken() {
 	const payload = {
 		iss: process.env.DOCUSIGN_CLIENT_ID,
@@ -155,7 +153,6 @@ app.get("/envelopes/:envelopeId/documents/:documentId", async (req, res) => {
 	}
 });
 
-// Start the server
 const PORT = 5000;
 app.listen(PORT, () => {
 	console.log(`Server running on http://localhost:${PORT}`);

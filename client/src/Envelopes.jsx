@@ -33,7 +33,7 @@ const Envelopes = () => {
 				{envelopes.map((envelope, envelopeIndex) => (
 					<li key={envelopeIndex}>
 						<Link to={`/${envelope.envelopeId}/documents`}>
-							{envelope.envelopeId}
+							{envelope.emailSubject}
 						</Link>
 					</li>
 				))}
