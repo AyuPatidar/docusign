@@ -21,6 +21,13 @@ There is a DocuSign account that contains some documents. Engineer a way such th
 - Fetch envelopes from docusign admin account
 - Fetch documents using docusign admin account
 
+## APIs used in this app.
+
+1. To request consent for application and generate Oauth access token - https://developers.docusign.com/platform/auth/jwt-get-token/
+2. To fetch the envelopes - https://developers.docusign.com/docs/esign-rest-api/reference/envelopes/envelopes/get/
+3. To fetch documents - https://developers.docusign.com/docs/esign-rest-api/reference/envelopes/envelopedocuments/list/
+4. To fetch a particular document - https://developers.docusign.com/docs/esign-rest-api/reference/envelopes/envelopedocuments/get/
+
 ## Environment Variables
 
 To run this project, you will need to add the following environment variables to your .env file
